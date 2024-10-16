@@ -22,4 +22,4 @@ def inspect_saved_model(saved_model_dir):
         print(f"  {layer.name}: {layer.shape}")
 
 # Usage
-inspect_saved_model(saved_model.pb)
+inspect_saved_model(model.pb)
