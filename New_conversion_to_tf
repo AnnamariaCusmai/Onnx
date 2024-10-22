@@ -1,0 +1,83 @@
+import tensorflow as tf
+from tensorflow.python.platform import gfile
+#%% Onnx to TF conversion
+
+device = 'cpu'
+
+tf_rep = prepare(onnx_model,device)
+
+print("Preparation OK!")
+
+tf_rep.export_graph('New/New_deep_model.pb')
+
+
+print("Tensorflow Export OK!")
+
+#%% Display of TF attributes
+
+
+
+
+GRAPH_PB_PATH = 'New_deep_model.pb'
+with tf.Session() as sess:
+   print("load graph")
+   with gfile.FastGFile(GRAPH_PB_PATH,'rb') as f:
+       graph_def = tf.GraphDef()
+   graph_def.ParseFromString(f.read())
+   sess.graph.as_default()
+   tf.import_graph_def(graph_def, name='')
+   graph_nodes=[n for n in graph_def.node]
+   names = []
+   for t in graph_nodes:
+      names.append(t.name)
+   print(names)
+   
+def print_inputs(pb_filepath):
+    with tf.gfile.GFile(pb_filepath, "rb") as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+
+        with tf.Graph().as_default() as graph:
+            tf.import_graph_def(graph_def, name='')
+
+        input_list = []
+        for op in graph.get_operations(): # tensorflow.python.framework.ops.Operation
+            if op.type == "Placeholder":
+                input_list.append(op.name)
+
+        print('Inputs:', input_list)
+
+
+def print_op(pb_filepath):
+    with tf.gfile.GFile(pb_filepath, "rb") as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+
+        with tf.Graph().as_default() as graph:
+            tf.import_graph_def(graph_def, name='')
+        plist = []
+        for op in graph.get_operations(): # tensorflow.python.framework.ops.Operation
+            plist.append(op.name)
+            print(op.values())
+        print('Operations:', plist)
+
+
+
+def print_outputs(pb_filepath):
+    with open(pb_filepath, 'rb') as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+
+        name_list = []
+        input_list = []
+        for node in graph_def.node: # tensorflow.core.framework.node_def_pb2.NodeDef
+            name_list.append(node.name)
+            input_list.extend(node.input)
+
+        outputs = set(name_list) - set(input_list)
+        print('Outputs:', list(outputs))
+
+
+print_inputs(GRAPH_PB_PATH)
+print_outputs(GRAPH_PB_PATH)
+print_op(GRAPH_PB_PATH)
